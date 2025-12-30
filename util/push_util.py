@@ -4,7 +4,6 @@ import urllib
 import requests
 from datetime import datetime
 import pytz
-from sympy import false
 
 
 def get_beijing_time():

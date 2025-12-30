@@ -273,7 +273,6 @@ def persist_user_tokens():
 
 if __name__ == "__main__":
 
-    load_dotenv()
     # 北京时间
     time_bj = get_beijing_time()
     encrypt_support = False
