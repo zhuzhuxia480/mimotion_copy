@@ -15,7 +15,6 @@ from util.aes_help import encrypt_data, decrypt_data
 import util.zepp_helper as zeppHelper
 import util.push_util as push_util
 
-from dotenv import load_dotenv
 
 # 获取默认值转int
 def get_int_value_default(_config: dict, _key, default):
