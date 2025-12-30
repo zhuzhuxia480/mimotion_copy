@@ -15,6 +15,8 @@ from util.aes_help import encrypt_data, decrypt_data
 import util.zepp_helper as zeppHelper
 import util.push_util as push_util
 
+from dotenv import load_dotenv
+
 # 获取默认值转int
 def get_int_value_default(_config: dict, _key, default):
     _config.setdefault(_key, default)
@@ -30,7 +32,7 @@ def get_min_max_by_time(hour=None, minute=None):
     time_rate = min((hour * 60 + minute) / (22 * 60), 1)
     min_step = get_int_value_default(config, 'MIN_STEP', 18000)
     max_step = get_int_value_default(config, 'MAX_STEP', 25000)
-    return int(time_rate * min_step), int(time_rate * max_step)
+    return int(min_step), int( max_step)
 
 
 # 虚拟ip地址
@@ -270,6 +272,8 @@ def persist_user_tokens():
 
 
 if __name__ == "__main__":
+
+    load_dotenv()
     # 北京时间
     time_bj = get_beijing_time()
     encrypt_support = False
@@ -303,7 +307,8 @@ if __name__ == "__main__":
             push_plus_max=get_int_value_default(config, 'PUSH_PLUS_MAX', 30),
             push_wechat_webhook_key=config.get('PUSH_WECHAT_WEBHOOK_KEY'),
             telegram_bot_token=config.get('TELEGRAM_BOT_TOKEN'),
-            telegram_chat_id=config.get('TELEGRAM_CHAT_ID')
+            telegram_chat_id=config.get('TELEGRAM_CHAT_ID'),
+            push_ft_token=config.get('PUSH_FT_TOKEN')
         )
         sleep_seconds = config.get('SLEEP_GAP')
         if sleep_seconds is None or sleep_seconds == '':

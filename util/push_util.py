@@ -1,8 +1,10 @@
 import json
+import urllib
 
 import requests
 from datetime import datetime
 import pytz
+from sympy import false
 
 
 def get_beijing_time():
@@ -25,13 +27,15 @@ class PushConfig:
                  push_plus_max=30,
                  push_wechat_webhook_key=None,
                  telegram_bot_token=None,
-                 telegram_chat_id=None):
+                 telegram_chat_id=None,
+                 push_ft_token=None):
         self.push_plus_token = push_plus_token
         self.push_plus_hour = push_plus_hour
         self.push_plus_max = int(push_plus_max) if push_plus_max else 30
         self.push_wechat_webhook_key = push_wechat_webhook_key
         self.telegram_bot_token = telegram_bot_token
         self.telegram_chat_id = telegram_chat_id
+        self.push_ft_token = push_ft_token
 
 
 def push_plus(token, title, content):
@@ -142,6 +146,7 @@ def push_results(exec_results, summary, config: PushConfig):
     push_to_push_plus(exec_results, summary, config)
     push_to_wechat_webhook(exec_results, summary, config)
     push_to_telegram_bot(exec_results, summary, config)
+    push_to_ft(exec_results, summary, config)
 
 
 def not_in_push_time_range(config: PushConfig) -> bool:
@@ -178,6 +183,37 @@ def not_in_push_time_range(config: PushConfig) -> bool:
         print(f"读取cron_change_time文件出错: {e}")
     print(f"当前整点时间为：{time_bj}，不在配置的推送时间，不执行推送")
     return True
+
+
+def push_to_ft(exec_results, summary, config: PushConfig):
+    """推送到方糖"""
+    # 判断是否需要方糖推送
+    if config.push_ft_token and config.push_ft_token != '':
+        html = f'<div>{summary}</div>'
+        flag = False
+        if len(exec_results) >= config.push_plus_max:
+            html += '<div>账号数量过多，详细情况请前往github actions中查看</div>'
+            flag = True
+        else:
+            html += '<ul>'
+            for exec_result in exec_results:
+                success = exec_result['success']
+                if success is not None and success is True:
+                    html += f'<li><span>账号：{exec_result["user"]}</span>刷步数成功，接口返回：{exec_result["msg"]}</li>'
+                else:
+                    html += f'<li><span>账号：{exec_result["user"]}</span>刷步数失败，失败原因：{exec_result["msg"]}</li>'
+                    flag = True
+            html += '</ul>'
+
+        if flag:
+            title = f"{'失败'}: {format_now()} 刷步数通知"
+            content = html
+            requestUrl = f"https://sctapi.ftqq.com/" + config.push_ft_token + ".send"
+            postdata = urllib.parse.urlencode({'title': title, 'desp': content}).encode('utf-8')
+            req = urllib.request.Request(requestUrl, data=postdata, method='POST')
+            with urllib.request.urlopen(req) as response:
+                result = response.read().decode('utf-8')
+                print(f"推送结果： {result}")
 
 
 def push_to_push_plus(exec_results, summary, config: PushConfig):
